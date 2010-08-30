@@ -29,7 +29,7 @@ module ActiveRecord
             def self.human_#{plural}(options = {})
               options[:sort] = true unless options[:sort] == false
               
-              hsh = #{plural}.map do |sym, value|
+              hsh = #{plural}.keys.map do |sym|
                 [enum_human_attribute_name(:#{column_name}, sym), sym]
               end
               
@@ -72,6 +72,8 @@ module ActiveRecord
           EOV
         end
         
+        # IMPROVE: handle pluralization (using a :count option?).
+        # FiXME: sorting should be done with transliterated strings.
         def enum_human_attribute_name(column_name, key)
           I18n.t(key, :scope => [:activerecord, :enums, model_name.underscore, column_name.to_sym],
             :default => lambda { |key, options| ActiveSupport::Inflector.humanize(key) })
