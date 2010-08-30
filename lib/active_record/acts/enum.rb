@@ -37,6 +37,10 @@ module ActiveRecord
               hsh
             end
             
+            def self.human_#{column_name}(key)
+              enum_human_attribute_name(:#{column_name}, key)
+            end
+            
             def human_#{column_name}
               self.class.enum_human_attribute_name(:#{column_name}, #{column_name})
             end
@@ -68,9 +72,9 @@ module ActiveRecord
           EOV
         end
         
-        def enum_human_attribute_name(column_name, value)
-          I18n.t(value, :scope => [:activerecord, :enums, model_name.underscore, column_name.to_sym],
-            :default => lambda { |key, options| ActiveSupport::Inflector.humanize(value) })
+        def enum_human_attribute_name(column_name, key)
+          I18n.t(key, :scope => [:activerecord, :enums, model_name.underscore, column_name.to_sym],
+            :default => lambda { |key, options| ActiveSupport::Inflector.humanize(key) })
         end
         
         def validates_enum(*args)

@@ -124,8 +124,12 @@ class UserEnumTest < Test::Unit::TestCase
   def test_human
     assert_equal 'Female', class_name.find(1).human_sex
     assert_equal 'Male', class_name.find(2).human_sex
+    
     assert_equal [['Female', :female], ['Male', :male]], class_name.human_sexes
     assert_equal [['Male', :male], ['Female', :female]], class_name.human_sexes(:sort => false)
+    
+    assert_equal 'Male', class_name.human_sex(:male)
+    assert_equal 'Female', class_name.human_sex(:female)
   end
 
   # TODO: How to test with i18n translations?
