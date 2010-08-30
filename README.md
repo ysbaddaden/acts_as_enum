@@ -48,8 +48,8 @@ I18n
 ====
 
 It uses the following scope:
-<tt>"activerecord.enums.#{model_name.underscore}.genders"</tt>. If not present
-it fallbacks to +humanize+.
+`"activerecord.enums.#{model_name.underscore}.genders"`. If not present
+it fallbacks to `humanize`.
 
 Example:
 
