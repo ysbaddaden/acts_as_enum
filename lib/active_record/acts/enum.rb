@@ -33,7 +33,12 @@ module ActiveRecord
                 [enum_human_attribute_name(:#{column_name}, sym), sym]
               end
               
-              return hsh.sort { |a,b| a[0] <=> b[0] } if options[:sort]
+              if options[:sort]
+                hsh.sort! do |a, b|
+                  ActiveSupport::Inflector.transliterate(a[0]) <=> ActiveSupport::Inflector.transliterate(b[0])
+                end
+              end
+              
               hsh
             end
             
@@ -73,7 +78,6 @@ module ActiveRecord
         end
         
         # IMPROVE: handle pluralization (using a :count option?).
-        # FiXME: sorting should be done with transliterated strings.
         def enum_human_attribute_name(column_name, key)
           I18n.t(key, :scope => [:activerecord, :enums, model_name.underscore, column_name.to_sym],
             :default => lambda { |key, options| ActiveSupport::Inflector.humanize(key) })
