@@ -73,7 +73,7 @@ module ActiveRecord
             :default => lambda { |key, options| ActiveSupport::Inflector.humanize(value) })
         end
         
-        def validates_as_enum(*args)
+        def validates_enum(*args)
           validates_each *args do |record, attr, value|
             plural = ActiveSupport::Inflector.pluralize(attr.to_s)
             keys = send(plural).keys

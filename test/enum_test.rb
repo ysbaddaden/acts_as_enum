@@ -20,7 +20,7 @@ class User < ActiveRecord::Base
     :male => 0,
     :female => 1
   }
-  validates_as_enum :sex, :allow_nil => true
+  validates_enum :sex, :allow_nil => true
 end
 
 class Admin < ActiveRecord::Base
@@ -28,7 +28,7 @@ class Admin < ActiveRecord::Base
     :male => 'man',
     :female => 'woman'
   }, :suffix => 'cd'
-  validates_as_enum :sex, :allow_nil => true
+  validates_enum :sex, :allow_nil => true
 end
 
 class UserEnumTest < Test::Unit::TestCase
