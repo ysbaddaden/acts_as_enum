@@ -39,18 +39,21 @@ module ActiveRecord
             
             def #{column_name}
               value = self.class.#{plural}.invert[read_attribute(:#{real_column_name})]
-              return @#{column_name}_enum if value.nil?
+              return @invalid_#{column_name}_enum if value.nil?
               value
             end
             
             def #{column_name}=(value)
               unless value.nil?
                 if self.class.#{plural}[value.to_sym]
+                  @invalid_#{column_name}_enum = nil
                   value = self.class.#{plural}[value.to_sym]
                 else
-                  @#{column_name}_enum = value
+                  @invalid_#{column_name}_enum = value
                   value = nil
                 end
+              else
+                @invalid_#{column_name}_enum = nil
               end
               
               write_attribute(:#{real_column_name}, value)

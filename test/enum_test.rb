@@ -92,8 +92,12 @@ class UserEnumTest < Test::Unit::TestCase
 
   def test_unknown_symbol
     u = class_name.find(3)
+    
     u.sex = :alien
     assert_equal :alien, u.sex
+    
+    u.sex = nil
+    assert_nil u.sex
   end
 
   def test_set_string
