@@ -7,14 +7,18 @@ module ActiveRecord
 
       module ClassMethods
         def acts_as_enum(column_name, enum, options = {})
-          plural = ActiveSupport::Inflector.pluralize(column_name.to_s)
+          column_name = column_name.to_s
+          real_column_name = column_name
+          real_column_name += '_' + options[:suffix] if options[:suffix]
+          
+          plural = ActiveSupport::Inflector.pluralize(column_name)
           
           methods = []
           scopes  = []
           
           enum.each do |sym, int|
-            methods.push("def #{sym}?() read_attribute(:#{column_name}) == #{int} end")
-            scopes.push("scope :#{ActiveSupport::Inflector.pluralize(sym.to_s)}, where(:#{column_name} => #{int})")
+            methods.push("def #{sym}?() read_attribute(:#{real_column_name}) == #{int} end")
+            scopes.push("scope :#{ActiveSupport::Inflector.pluralize(sym.to_s)}, where(:#{real_column_name} => #{int})")
           end
           
           class_eval <<-EOV
@@ -34,21 +38,26 @@ module ActiveRecord
             end
             
             def #{column_name}
-              value = self.class.#{plural}.invert[read_attribute(:#{column_name})]
-              return @#{column_name}_enum_sym if value.nil?
+              value = self.class.#{plural}.invert[read_attribute(:#{real_column_name})]
+              return @#{column_name}_enum if value.nil?
               value
             end
             
             def #{column_name}=(value)
-              unless value.kind_of?(Fixnum) || value.to_i.to_s == value.to_s
+              unless value.kind_of?(Fixnum) || (value.respond_to?(:to_i) && value.to_i.to_s == value.to_s)
                 if value.respond_to?(:to_sym)
                   value = value.to_sym
                   value = self.class.#{plural}[value] unless self.class.#{plural}[value].nil?
                 end
               end
               
-              @#{column_name}_enum_sym = value
-              write_attribute(:#{column_name}, value)
+              # does enum exists?
+              if self.class.#{plural}.keys.include?(value) || self.class.#{plural}.values.include?(value)
+                write_attribute(:#{real_column_name}, value)
+              else
+                @#{column_name}_enum = value
+                write_attribute(:#{real_column_name}, -1)
+              end
             end
             
             #{methods.join("\n")}

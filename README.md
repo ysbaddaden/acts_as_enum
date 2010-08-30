@@ -5,8 +5,15 @@ This acts_as extension for ActiveRecord 3.0 provides the capabilities for
 mapping an integer column to symbols, while adding useful scopes as well as
 translations.
 
+Please note that values must always be positive numbers (greater than or equal
+to zero). Negative numbers must not be used.
+
 Example
 =======
+
+    create_table :users do |t|
+      t.column :sex, :integer
+    end
 
     class User < ActiveRecord::Base
       acts_as_enum :gender, {
@@ -16,15 +23,31 @@ Example
       validates_as_enum :gender, :allow_nil => true
     end
 
+You may also add a suffix to the column name. In that case you won't be
+using the `users.sex` column but the `users.sex_cd` column (for instance).
+You will then be able to interact with `User.sex` (symbols) and `User.sex_enum`
+(integers).
+
+    create_table :users do |t|
+      t.column :sex_cd, :integer
+    end
+
+    class User < ActiveRecord::Base
+      acts_as_enum :gender, {
+        :male => 1,
+        :female => 2
+      }, :suffix => 'enum'
+    end
+
 Generated instance methods
 
     user.gender = :male     # => :male
-    user.gender = 1         # => :male
     user.gender = 'female'  # => :female
-  
+    user.gender = 1         # => :male
+    
     user.male?
     user.female?
-  
+    
     user.gender         # => :male
     user.human_gender   # => "Male"
 
@@ -64,6 +87,6 @@ Example:
 TODO
 ====
 
-It should not be tied to ActiveRecord but usable by any ActiveModel compliant
-ruby Object.
+ActsAsEnum should not be tied to ActiveRecord but usable by any ActiveModel
+compliant ruby Object.
 
