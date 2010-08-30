@@ -26,11 +26,15 @@ module ActiveRecord
               #{enum.inspect}
             end
             
-            def self.human_#{plural}
+            def self.human_#{plural}(options = {})
+              options[:sort] = true unless options[:sort] == false
+              
               hsh = #{plural}.map do |sym, value|
                 [enum_human_attribute_name(:#{column_name}, sym), sym]
               end
-              hsh.sort { |a,b| a[0] <=> b[0] }
+              
+              return hsh.sort { |a,b| a[0] <=> b[0] } if options[:sort]
+              hsh
             end
             
             def human_#{column_name}
