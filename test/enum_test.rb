@@ -23,26 +23,34 @@ class User < ActiveRecord::Base
   validates_as_enum :sex, :allow_nil => true
 end
 
-class SuffixedUser < ActiveRecord::Base
+class Admin < ActiveRecord::Base
   acts_as_enum :sex, {
-    :male => 0,
-    :female => 1
+    :male => 'man',
+    :female => 'woman'
   }, :suffix => 'cd'
   validates_as_enum :sex, :allow_nil => true
 end
 
-class EnumTest < Test::Unit::TestCase
+class UserEnumTest < Test::Unit::TestCase
   def class_name
     User
   end
 
-  def setup
+  def setup_table
     ActiveRecord::Schema.define do
       create_table :users do |t|
         t.column :sex, :integer
       end
     end
-    (1..5).each { |counter| class_name.create! :sex => counter % 2 }
+  end
+
+  def setup
+    setup_table
+    
+    (1..5).each do |counter|
+      sex = (counter % 2 == 0) ? :male : :female
+      class_name.create! :sex => sex
+    end
   end
 
   def teardown
@@ -98,16 +106,6 @@ class EnumTest < Test::Unit::TestCase
     assert_equal :female, u.sex
   end
 
-  def test_set_integer
-    u = class_name.find(1)
-    u.sex = 0
-    assert_equal :male, u.sex
-    
-    u = class_name.find(3)
-    u.sex = 1
-    assert_equal :female, u.sex
-  end
-
   def test_bool_methods
     assert class_name.find(1).female?
     assert !class_name.find(1).male?
@@ -143,17 +141,16 @@ class EnumTest < Test::Unit::TestCase
   end
 end
 
-class EnumWithSuffixTest < EnumTest
+class AdminEnumTest < UserEnumTest
   def class_name
-    SuffixedUser
+    Admin
   end
 
-  def setup
+  def setup_table
     ActiveRecord::Schema.define do
-      create_table :suffixed_users do |t|
-        t.column :sex_cd, :integer
+      create_table :admins do |t|
+        t.column :sex_cd, :string
       end
     end
-    (1..5).each { |counter| class_name.create! :sex => counter % 2 }
   end
 end

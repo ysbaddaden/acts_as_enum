@@ -16,9 +16,9 @@ module ActiveRecord
           methods = []
           scopes  = []
           
-          enum.each do |sym, int|
-            methods.push("def #{sym}?() read_attribute(:#{real_column_name}) == #{int} end")
-            scopes.push("scope :#{ActiveSupport::Inflector.pluralize(sym.to_s)}, where(:#{real_column_name} => #{int})")
+          enum.each do |sym, value|
+            methods.push("def #{sym}?() read_attribute(:#{real_column_name}) == #{value.inspect} end")
+            scopes.push("scope :#{ActiveSupport::Inflector.pluralize(sym.to_s)}, where(:#{real_column_name} => #{value.inspect})")
           end
           
           class_eval <<-EOV
@@ -27,7 +27,7 @@ module ActiveRecord
             end
             
             def self.human_#{plural}
-              hsh = #{plural}.map do |sym,int|
+              hsh = #{plural}.map do |sym, value|
                 [enum_human_attribute_name(:#{column_name}, sym), sym]
               end
               hsh.sort { |a,b| a[0] <=> b[0] }
@@ -44,20 +44,16 @@ module ActiveRecord
             end
             
             def #{column_name}=(value)
-              unless value.kind_of?(Fixnum) || (value.respond_to?(:to_i) && value.to_i.to_s == value.to_s)
-                if value.respond_to?(:to_sym)
-                  value = value.to_sym
-                  value = self.class.#{plural}[value] unless self.class.#{plural}[value].nil?
+              unless value.nil?
+                if self.class.#{plural}[value.to_sym]
+                  value = self.class.#{plural}[value.to_sym]
+                else
+                  @#{column_name}_enum = value
+                  value = nil
                 end
               end
               
-              # does enum exists?
-              if self.class.#{plural}.keys.include?(value) || self.class.#{plural}.values.include?(value)
-                write_attribute(:#{real_column_name}, value)
-              else
-                @#{column_name}_enum = value
-                write_attribute(:#{real_column_name}, -1)
-              end
+              write_attribute(:#{real_column_name}, value)
             end
             
             #{methods.join("\n")}
