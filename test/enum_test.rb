@@ -1,5 +1,6 @@
 require 'test/unit'
 require 'rubygems'
+require 'logger'
 
 gem 'activerecord', '>= 3.0.0'
 require 'active_record'
@@ -13,7 +14,18 @@ else
   require "#{File.dirname(__FILE__)}/../init"
 end
 
+ActiveRecord::Base.logger = Logger.new(File.dirname(__FILE__) + '/test.log')
 ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :database => ":memory:")
+
+ActiveRecord::Schema.define do
+  create_table :users do |t|
+    t.column :sex, :integer
+  end
+  
+  create_table :admins do |t|
+    t.column :sex_cd, :string
+  end
+end
 
 class User < ActiveRecord::Base
   acts_as_enum :sex, {
@@ -36,27 +48,19 @@ class UserEnumTest < Test::Unit::TestCase
     User
   end
 
-  def setup_table
-    ActiveRecord::Schema.define do
-      create_table :users do |t|
-        t.column :sex, :integer
+  def setup
+    (1..5).each do |counter|
+      sex = (counter % 2 == 0) ? :male : :female
+      class_name.new do |u|
+        u.id = counter
+        u.sex = sex
+        u.save!
       end
     end
   end
 
-  def setup
-    setup_table
-    
-    (1..5).each do |counter|
-      sex = (counter % 2 == 0) ? :male : :female
-      class_name.create! :sex => sex
-    end
-  end
-
   def teardown
-    ActiveRecord::Base.connection.tables.each do |table|
-      ActiveRecord::Base.connection.drop_table(table)
-    end
+    class_name.delete_all
   end
 
   def test_generated_methods
@@ -155,10 +159,7 @@ class UserEnumTest < Test::Unit::TestCase
   end
 
   # TODO: How to test with i18n translations?
-#  def test_translations
-#    assert_equal 'Man', class_name.find(1).human_sex
-#    assert_equal 'Woman', class_name.find(2).human_sex
-#    assert_equal [['Man', :male], ['Woman', :female]], class_name.human_sexes
+#  def test_i18n
 #  end
 
   def test_validation
@@ -175,13 +176,5 @@ end
 class AdminEnumTest < UserEnumTest
   def class_name
     Admin
-  end
-
-  def setup_table
-    ActiveRecord::Schema.define do
-      create_table :admins do |t|
-        t.column :sex_cd, :string
-      end
-    end
   end
 end
