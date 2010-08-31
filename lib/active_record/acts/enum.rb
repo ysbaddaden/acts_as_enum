@@ -13,6 +13,9 @@ module ActiveRecord
           
           plural = ActiveSupport::Inflector.pluralize(column_name)
           
+          i18n_scope = options[:i18n_scope]
+          i18n_scope ||= [:activerecord, :enums, model_name.underscore, column_name]
+          
           methods = []
           scopes  = []
           
@@ -72,23 +75,23 @@ module ActiveRecord
               write_attribute(:#{real_column_name}, value)
             end
             
+            def self.#{column_name}_i18n_scope
+              #{i18n_scope.inspect}
+            end
+            
             #{methods.join("\n")}
             #{scopes.join("\n")}
           EOV
         end
-
+        
         def enum_human_attribute_name(column_name, key, options = {})
           options = options.dup
-          plural = options.delete(:plural) && options[:count].nil?
-          
-          options[:scope] = [:activerecord, :enums, model_name.underscore, column_name.to_sym]
-          options[:scope].push(plural ? :other : :one) if plural
-          
+          plural = options.delete(:plural)
+          options[:count] = plural ? 2 : 1 unless options[:count]
+          options[:scope] = send(:"#{column_name}_i18n_scope")
           options[:default] = lambda { |key, options|
             trans = ActiveSupport::Inflector.humanize(key)
-            if plural || (options[:count] && options[:count] != 1)
-              trans = ActiveSupport::Inflector.pluralize(trans)
-            end
+            trans = ActiveSupport::Inflector.pluralize(trans) unless options[:count] == 1
             trans
           }
           I18n.t(key, options)

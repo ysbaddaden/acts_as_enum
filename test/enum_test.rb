@@ -43,6 +43,25 @@ class Admin < ActiveRecord::Base
   validates_enum :sex, :allow_nil => true
 end
 
+I18n.backend.store_translations(:fr, {
+  :activerecord => {
+    :enums => {
+      :user => {
+        :sex => {
+          :male   => {:one => "homme", :other => "hommes"},
+          :female => {:one => "femme", :other => "femmes"}
+        }
+      },
+      :admin => {
+        :sex => {
+          :male   => {:one => "homme", :other => "hommes"},
+          :female => {:one => "femme", :other => "femmes"}
+        }
+      }
+    }
+  }
+})
+
 class UserEnumTest < Test::Unit::TestCase
   def class_name
     User
@@ -140,9 +159,6 @@ class UserEnumTest < Test::Unit::TestCase
     assert_equal 'Male', class_name.human_sex(:male, :count => 1)
     assert_equal 'Males', class_name.human_sex(:male, :count => 2)
     
-    assert_equal 'Female', class_name.find(1).human_sex(:count => 1)
-    assert_equal 'Males', class_name.find(2).human_sex(:count => 3)
-    
     assert_equal [['Female', :female], ['Male', :male]], class_name.human_sexes(:count => 1, )
     assert_equal [['Males', :male], ['Females', :female]], class_name.human_sexes(:count => 2, :sort => false)
   end
@@ -151,16 +167,25 @@ class UserEnumTest < Test::Unit::TestCase
     assert_equal 'Males', class_name.human_sex(:male, :plural => true)
     assert_equal 'Females', class_name.human_sex(:female, :plural => true)
     
-    assert_equal 'Females', class_name.find(1).human_sex(:plural => true)
-    assert_equal 'Males', class_name.find(2).human_sex(:plural => true)
-    
     assert_equal [['Females', :female], ['Males', :male]], class_name.human_sexes(:plural => true)
     assert_equal [['Males', :male], ['Females', :female]], class_name.human_sexes(:plural => true, :sort => false)
   end
 
-  # TODO: How to test with i18n translations?
-#  def test_i18n
-#  end
+  def test_i18n
+    I18n.with_locale :fr do
+      assert_equal 'homme', class_name.human_sex(:male)
+      assert_equal 'femme', class_name.human_sex(:female)
+      
+      assert_equal 'hommes', class_name.human_sex(:male, :plural => true)
+      assert_equal 'femmes', class_name.human_sex(:female, :plural => true)
+      
+      assert_equal 'homme', class_name.human_sex(:male, :count => 1)
+      assert_equal 'femme', class_name.human_sex(:female, :count => 1)
+      
+      assert_equal 'hommes', class_name.human_sex(:male, :count => 2)
+      assert_equal 'femmes', class_name.human_sex(:female, :count => 2)
+    end
+  end
 
   def test_validation
     assert class_name.create(:sex => :female).valid?, "sex => :female"
