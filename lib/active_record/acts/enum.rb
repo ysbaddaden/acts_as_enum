@@ -27,13 +27,13 @@ module ActiveRecord
             end
             
             def self.human_#{plural}(options = {})
-              options[:sort] = true unless options[:sort] == false
+              sort = options.delete(:sort)
               
               hsh = #{plural}.keys.map do |sym|
-                [enum_human_attribute_name(:#{column_name}, sym), sym]
+                [enum_human_attribute_name(:#{column_name}, sym, options), sym]
               end
               
-              if options[:sort]
+              unless sort == false
                 hsh.sort! do |a, b|
                   ActiveSupport::Inflector.transliterate(a[0]) <=> ActiveSupport::Inflector.transliterate(b[0])
                 end
@@ -42,12 +42,12 @@ module ActiveRecord
               hsh
             end
             
-            def self.human_#{column_name}(key)
-              enum_human_attribute_name(:#{column_name}, key)
+            def self.human_#{column_name}(key, options = {})
+              enum_human_attribute_name(:#{column_name}, key, options)
             end
             
-            def human_#{column_name}
-              self.class.enum_human_attribute_name(:#{column_name}, #{column_name})
+            def human_#{column_name}(options = {})
+              self.class.enum_human_attribute_name(:#{column_name}, #{column_name}, options)
             end
             
             def #{column_name}
@@ -76,13 +76,24 @@ module ActiveRecord
             #{scopes.join("\n")}
           EOV
         end
-        
-        # IMPROVE: handle pluralization (using a :count option?).
-        def enum_human_attribute_name(column_name, key)
-          I18n.t(key, :scope => [:activerecord, :enums, model_name.underscore, column_name.to_sym],
-            :default => lambda { |key, options| ActiveSupport::Inflector.humanize(key) })
+
+        def enum_human_attribute_name(column_name, key, options = {})
+          options = options.dup
+          plural = options.delete(:plural) && options[:count].nil?
+          
+          options[:scope] = [:activerecord, :enums, model_name.underscore, column_name.to_sym]
+          options[:scope].push(plural ? :other : :one) if plural
+          
+          options[:default] = lambda { |key, options|
+            trans = ActiveSupport::Inflector.humanize(key)
+            if plural || (options[:count] && options[:count] != 1)
+              trans = ActiveSupport::Inflector.pluralize(trans)
+            end
+            trans
+          }
+          I18n.t(key, options)
         end
-        
+
         def validates_enum(*args)
           validates_each *args do |record, attr, value|
             plural = ActiveSupport::Inflector.pluralize(attr.to_s)

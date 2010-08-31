@@ -122,14 +122,36 @@ class UserEnumTest < Test::Unit::TestCase
   end
 
   def test_human
+    assert_equal 'Male', class_name.human_sex(:male)
+    assert_equal 'Female', class_name.human_sex(:female)
+    
     assert_equal 'Female', class_name.find(1).human_sex
     assert_equal 'Male', class_name.find(2).human_sex
     
     assert_equal [['Female', :female], ['Male', :male]], class_name.human_sexes
     assert_equal [['Male', :male], ['Female', :female]], class_name.human_sexes(:sort => false)
+  end
+
+  def test_human_with_count
+    assert_equal 'Male', class_name.human_sex(:male, :count => 1)
+    assert_equal 'Males', class_name.human_sex(:male, :count => 2)
     
-    assert_equal 'Male', class_name.human_sex(:male)
-    assert_equal 'Female', class_name.human_sex(:female)
+    assert_equal 'Female', class_name.find(1).human_sex(:count => 1)
+    assert_equal 'Males', class_name.find(2).human_sex(:count => 3)
+    
+    assert_equal [['Female', :female], ['Male', :male]], class_name.human_sexes(:count => 1, )
+    assert_equal [['Males', :male], ['Females', :female]], class_name.human_sexes(:count => 2, :sort => false)
+  end
+
+  def test_human_pluralization
+    assert_equal 'Males', class_name.human_sex(:male, :plural => true)
+    assert_equal 'Females', class_name.human_sex(:female, :plural => true)
+    
+    assert_equal 'Females', class_name.find(1).human_sex(:plural => true)
+    assert_equal 'Males', class_name.find(2).human_sex(:plural => true)
+    
+    assert_equal [['Females', :female], ['Males', :male]], class_name.human_sexes(:plural => true)
+    assert_equal [['Males', :male], ['Females', :female]], class_name.human_sexes(:plural => true, :sort => false)
   end
 
   # TODO: How to test with i18n translations?
