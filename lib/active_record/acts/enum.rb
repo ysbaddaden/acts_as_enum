@@ -60,6 +60,8 @@ module ActiveRecord
             end
             
             def #{column_name}=(value)
+              value = nil if value.blank?
+              
               unless value.nil?
                 if self.class.#{plural}[value.to_sym]
                   @invalid_#{column_name}_enum = nil

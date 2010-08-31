@@ -133,6 +133,15 @@ class UserEnumTest < Test::Unit::TestCase
     assert_equal :female, u.sex
   end
 
+  def test_set_empty_string
+    u = class_name.new(:sex => "")
+    assert_nil u.sex
+
+    u = class_name.find(1)
+    u.sex = " "
+    assert_nil u.sex
+  end
+
   def test_bool_methods
     assert class_name.find(1).female?
     assert !class_name.find(1).male?
