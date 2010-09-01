@@ -113,10 +113,10 @@ module ActiveRecord
         def where_enum_column(column_name, value, collection_name) # :nodoc:
           collection_name = collection_name.to_sym
           
-          if value.is_a?(Symbol)
-            value = send(collection_name)[value]
-          elsif value.kind_of?(Array)
-            value.map! { |v| send(collection_name)[v] }
+          if value.kind_of?(Array)
+            value.map! { |v| send(collection_name)[v.to_sym] }
+          else
+            value = send(collection_name)[value.to_sym]
           end
           
           where(column_name => value)

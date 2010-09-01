@@ -208,7 +208,9 @@ class UserEnumTest < Test::Unit::TestCase
 
   def test_where_enum
     assert_equal 2, class_name.where_sex(:male).count
+    assert_equal 2, class_name.where_sex('male').count
     assert_equal 3, class_name.where_sex(:female).count
+    assert_equal 3, class_name.where_sex('female').count
   end
 end
 
