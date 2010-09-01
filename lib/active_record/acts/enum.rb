@@ -7,11 +7,10 @@ module ActiveRecord
 
       module ClassMethods
         def acts_as_enum(column_name, enum, options = {})
-          column_name = column_name.to_s
-          real_column_name = column_name
+          real_column_name = column_name.to_s
           real_column_name += '_' + options[:suffix] if options[:suffix]
           
-          plural = ActiveSupport::Inflector.pluralize(column_name)
+          plural = ActiveSupport::Inflector.pluralize(column_name.to_s)
           
           i18n_scope = options[:i18n_scope]
           i18n_scope ||= [:activerecord, :enums, model_name.underscore, column_name]
@@ -27,30 +26,6 @@ module ActiveRecord
           class_eval <<-EOV
             def self.#{plural}
               #{enum.inspect}
-            end
-            
-            def self.human_#{plural}(options = {})
-              sort = options.delete(:sort)
-              
-              hsh = #{plural}.keys.map do |sym|
-                [enum_human_attribute_name(:#{column_name}, sym, options), sym]
-              end
-              
-              unless sort == false
-                hsh.sort! do |a, b|
-                  ActiveSupport::Inflector.transliterate(a[0]) <=> ActiveSupport::Inflector.transliterate(b[0])
-                end
-              end
-              
-              hsh
-            end
-            
-            def self.human_#{column_name}(key, options = {})
-              enum_human_attribute_name(:#{column_name}, key, options)
-            end
-            
-            def human_#{column_name}(options = {})
-              self.class.enum_human_attribute_name(:#{column_name}, #{column_name}, options)
             end
             
             def #{column_name}
@@ -81,8 +56,36 @@ module ActiveRecord
               #{i18n_scope.inspect}
             end
             
+            def self.where_#{column_name}(value)
+              where_enum_column(:#{real_column_name}, value, :#{plural})
+            end
+            
             #{methods.join("\n")}
             #{scopes.join("\n")}
+            
+            def self.human_#{plural}(options = {})
+              sort = options.delete(:sort)
+              
+              hsh = #{plural}.keys.map do |sym|
+                [enum_human_attribute_name(:#{column_name}, sym, options), sym]
+              end
+              
+              unless sort == false
+                hsh.sort! do |a, b|
+                  ActiveSupport::Inflector.transliterate(a[0]) <=> ActiveSupport::Inflector.transliterate(b[0])
+                end
+              end
+              
+              hsh
+            end
+            
+            def self.human_#{column_name}(key, options = {})
+              enum_human_attribute_name(:#{column_name}, key, options)
+            end
+            
+            def human_#{column_name}(options = {})
+              self.class.enum_human_attribute_name(:#{column_name}, #{column_name}, options)
+            end
           EOV
         end
         
@@ -105,6 +108,18 @@ module ActiveRecord
             keys = send(plural).keys
             record.errors.add(attr, :invalid_enum) unless keys.include?(value)
           end
+        end
+
+        def where_enum_column(column_name, value, collection_name) # :nodoc:
+          collection_name = collection_name.to_sym
+          
+          if value.is_a?(Symbol)
+            value = send(collection_name)[value]
+          elsif value.kind_of?(Array)
+            value.map! { |v| send(collection_name)[v] }
+          end
+          
+          where(column_name => value)
         end
       end
     end

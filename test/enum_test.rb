@@ -168,7 +168,7 @@ class UserEnumTest < Test::Unit::TestCase
     assert_equal 'Male', class_name.human_sex(:male, :count => 1)
     assert_equal 'Males', class_name.human_sex(:male, :count => 2)
     
-    assert_equal [['Female', :female], ['Male', :male]], class_name.human_sexes(:count => 1, )
+    assert_equal [['Female', :female], ['Male', :male]], class_name.human_sexes(:count => 1)
     assert_equal [['Males', :male], ['Females', :female]], class_name.human_sexes(:count => 2, :sort => false)
   end
 
@@ -204,6 +204,11 @@ class UserEnumTest < Test::Unit::TestCase
     
     assert !class_name.create(:sex => :alien).valid?, ":alien shouldn't be allowed"
     assert !class_name.create(:sex => 'martian').valid?, "'martian' shouldn't be allowed"
+  end
+
+  def test_where_enum
+    assert_equal 2, class_name.where_sex(:male).count
+    assert_equal 3, class_name.where_sex(:female).count
   end
 end
 
