@@ -211,6 +211,9 @@ class UserEnumTest < Test::Unit::TestCase
     assert_equal 2, class_name.where_sex('male').count
     assert_equal 3, class_name.where_sex(:female).count
     assert_equal 3, class_name.where_sex('female').count
+    
+    assert_equal 5, class_name.where_sex([:female, :male]).count
+    assert_equal 5, class_name.where_sex(['female', :male]).count
   end
 end
 
